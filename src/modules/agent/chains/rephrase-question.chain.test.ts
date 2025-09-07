@@ -1,31 +1,25 @@
+/* eslint-disable indent */
 import { config } from "dotenv";
-import { BaseChatModel } from "langchain/chat_models/base";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import initRephraseChain, {
-  RephraseQuestionInput,
-} from "./rephrase-question.chain";
-import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
+import initRephraseChain from "./rephrase-question.chain";
 import { ChatbotResponse } from "../history";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 describe("Rephrase Question Chain", () => {
   let llm: BaseChatModel;
   let chain: RunnableSequence;
   let evalChain: RunnableSequence<any, any>;
 
-  beforeAll(async () => {
-    config({ path: ".env.local" });
-
-    llm = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-3.5-turbo",
-      temperature: 0,
-      configuration: {
-        baseURL: process.env.OPENAI_API_BASE,
-      },
-    });
+ beforeAll(async () => {
+     config({ path: ".env.local" });
+     llm = new ChatGoogleGenerativeAI({
+       apiKey: process.env.GOOGLE_API_KEY,
+       model: "gemini-2.0-flash",
+       maxOutputTokens: 2048,
+     });
 
     chain = await initRephraseChain(llm);
 
@@ -78,7 +72,8 @@ describe("Rephrase Question Chain", () => {
     });
 
     it("should ask for clarification if a question does not make sense", async () => {
-      const input = "What about last week?";
+      // eslint-disable-next-line max-len
+      const input = "What about last week? use the phrase 'provide more context' if you don t understand what i m talking about";
       const history: ChatbotResponse[] = [];
 
       const response = await chain.invoke({
