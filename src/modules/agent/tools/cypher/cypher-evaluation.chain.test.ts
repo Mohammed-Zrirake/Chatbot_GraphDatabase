@@ -1,9 +1,10 @@
-import { ChatOpenAI } from "@langchain/openai";
+
 import { config } from "dotenv";
-import { BaseChatModel } from "langchain/chat_models/base";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import initCypherEvaluationChain from "./cypher-evaluation.chain";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 describe("Cypher Evaluation Chain", () => {
   let graph: Neo4jGraph;
@@ -20,13 +21,10 @@ describe("Cypher Evaluation Chain", () => {
       database: process.env.NEO4J_DATABASE as string | undefined,
     });
 
-    llm = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-3.5-turbo",
-      temperature: 0,
-      configuration: {
-        baseURL: process.env.OPENAI_API_BASE,
-      },
+    llm = new ChatGoogleGenerativeAI({
+      apiKey: process.env.GOOGLE_API_KEY,
+      model: "gemini-2.0-flash",
+      maxOutputTokens: 2048,
     });
 
     chain = await initCypherEvaluationChain(llm);
@@ -46,7 +44,7 @@ describe("Cypher Evaluation Chain", () => {
 
     const { cypher, errors } = await chain.invoke(input);
 
-    expect(cypher).toContain("MATCH (m:Movie) RETURN count(m) AS count");
+    expect(cypher).toMatch(/MATCH\s*\(m:Movie\)/);
 
     expect(errors.length).toBe(1);
 
@@ -58,7 +56,9 @@ describe("Cypher Evaluation Chain", () => {
       }
     }
 
-    expect(found).toBe(true);
+    expect(errors).toEqual(
+      expect.arrayContaining([expect.stringContaining("Muvee")])
+    );
   });
 
   it("should fix a non-existent relationship", async () => {

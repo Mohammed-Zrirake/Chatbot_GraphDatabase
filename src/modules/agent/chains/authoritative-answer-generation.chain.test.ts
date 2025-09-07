@@ -1,10 +1,12 @@
+/* eslint-disable indent */
 import { config } from "dotenv";
-import { BaseChatModel } from "langchain/chat_models/base";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import initGenerateAuthoritativeAnswerChain from "./authoritative-answer-generation.chain";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 describe("Authoritative Answer Generation Chain", () => {
   let llm: BaseChatModel;
@@ -14,14 +16,11 @@ describe("Authoritative Answer Generation Chain", () => {
   beforeAll(async () => {
     config({ path: ".env.local" });
 
-    llm = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-3.5-turbo",
-      temperature: 0,
-      configuration: {
-        baseURL: process.env.OPENAI_API_BASE,
-      },
-    });
+   llm = new ChatGoogleGenerativeAI({
+     apiKey: process.env.GOOGLE_API_KEY,
+     model: "gemini-2.0-flash",
+     maxOutputTokens: 2048,
+   });
 
     chain = await initGenerateAuthoritativeAnswerChain(llm);
 

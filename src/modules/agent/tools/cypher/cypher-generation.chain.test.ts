@@ -1,11 +1,12 @@
-import { ChatOpenAI } from "@langchain/openai";
+
 import { config } from "dotenv";
-import { BaseChatModel } from "langchain/chat_models/base";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import initCypherGenerationChain from "./cypher-generation.chain";
 import { extractIds } from "../../../../utils";
 import { close } from "../../../graph";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 describe("Cypher Generation Chain", () => {
   let graph: Neo4jGraph;
@@ -22,14 +23,13 @@ describe("Cypher Generation Chain", () => {
       database: process.env.NEO4J_DATABASE as string | undefined,
     });
 
-    llm = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-3.5-turbo",
-      temperature: 0,
-      configuration: {
-        baseURL: process.env.OPENAI_API_BASE,
-      },
+   
+    llm = new ChatGoogleGenerativeAI({
+      apiKey: process.env.GOOGLE_API_KEY,
+      model: "gemini-2.0-flash",
+      maxOutputTokens: 2048,
     });
+
 
     chain = await initCypherGenerationChain(graph, llm);
   });
