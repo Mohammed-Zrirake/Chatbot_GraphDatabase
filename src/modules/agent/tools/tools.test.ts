@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import initTools from ".";
 import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 describe("Tool Chain", () => {
   it("should return two tools", async () => {
@@ -12,13 +13,10 @@ describe("Tool Chain", () => {
       database: process.env.NEO4J_DATABASE as string | undefined,
     });
 
-    const llm = new ChatOpenAI({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "gpt-3.5-turbo",
-      temperature: 0,
-      configuration: {
-        baseURL: process.env.OPENAI_API_BASE,
-      },
+    const llm = new ChatGoogleGenerativeAI({
+      apiKey: process.env.GOOGLE_API_KEY,
+      model: "gemini-2.0-flash",
+      maxOutputTokens: 2048,
     });
 
     const embeddings = new OpenAIEmbeddings({
